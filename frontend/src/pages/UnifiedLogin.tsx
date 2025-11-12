@@ -52,6 +52,7 @@ const UnifiedLogin: React.FC = () => {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ idToken: credential }),
+              credentials: 'include', // Required for CORS with credentials
             })
             
             if (!fetchRes.ok) {

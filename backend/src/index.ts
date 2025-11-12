@@ -26,24 +26,21 @@ const allowedOrigins: string[] = [
   "https://therabeefinal.onrender.com",
 ];
 
-// Global Middleware
+// CORS must be FIRST middleware - before any other middleware
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, Postman, or same-origin requests)
     if (!origin) {
-      console.log('[CORS] Request with no origin - allowing');
       return callback(null, true);
     }
 
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
-      console.log('[CORS] Allowed origin:', origin);
       return callback(null, true);
     }
 
     // Check for Vercel preview deployments (they have dynamic URLs)
     if (origin.includes('.vercel.app')) {
-      console.log('[CORS] Vercel deployment detected - allowing:', origin);
       return callback(null, true);
     }
 
@@ -53,19 +50,49 @@ const corsOptions: CorsOptions = {
     callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 };
 
+// Apply CORS FIRST - before any other middleware
 app.use(cors(corsOptions));
+
+// Handle preflight OPTIONS requests explicitly for all routes
+app.options('*', (req, res) => {
+  const origin = req.headers.origin;
+  
+  // Check if origin is allowed
+  if (!origin || allowedOrigins.includes(origin) || origin.includes('.vercel.app')) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    return res.sendStatus(204);
+  }
+  
+  res.sendStatus(403);
+});
+
+// Parse JSON bodies
 app.use(express.json());
 
-// Basic request logger (path, method, status)
+// Basic request logger (path, method, status) - AFTER CORS
 app.use((req, res, next) => {
   const started = Date.now();
   // eslint-disable-next-line no-console
-  console.log('[REQ]', req.method, req.originalUrl);
+  console.log('[REQ]', req.method, req.originalUrl, 'Origin:', req.headers.origin || 'none');
   res.on('finish', () => {
     const ms = Date.now() - started;
     // eslint-disable-next-line no-console
