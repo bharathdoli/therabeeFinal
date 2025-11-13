@@ -1,10 +1,9 @@
 import HeroSection from "../components/HeroSection";
 import VisionSection from "../components/VisionSection";
 import FeaturesSection from "../components/FeaturesSection";
+import CoreValuesSection from "../components/CoreValuesSection";
 import HowItWorksSection from "../components/HowItWorksSection";
 import TestimonialsSection from "../components/TestimonialsSection";
-import PricingSection from "../components/PricingSection";
-import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 
 const Index = () => {
@@ -13,10 +12,9 @@ const Index = () => {
       <HeroSection />
       <VisionSection />
       <FeaturesSection />
+      <CoreValuesSection />
       <HowItWorksSection />
       <TestimonialsSection />
-      <PricingSection />
-      <CTASection />
       <Footer />
     </div>
   );

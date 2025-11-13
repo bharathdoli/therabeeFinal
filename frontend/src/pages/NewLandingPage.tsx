@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Stethoscope, Menu, X, Calendar, Moon, Sun, ArrowRight } from 'lucide-react'
+import { Menu, X, Calendar, Moon, Sun, ArrowRight } from 'lucide-react'
+import logo from '../assets/logo.png'
 import HeroSection from '../LandingPagecomponents/components/HeroSection'
 import VisionSection from '../LandingPagecomponents/components/VisionSection'
 import FeaturesSection from '../LandingPagecomponents/components/FeaturesSection'
+import CoreValuesSection from '../LandingPagecomponents/components/CoreValuesSection'
 import HowItWorksSection from '../LandingPagecomponents/components/HowItWorksSection'
 import TestimonialsSection from '../LandingPagecomponents/components/TestimonialsSection'
-import PricingSection from '../LandingPagecomponents/components/PricingSection'
-import CTASection from '../LandingPagecomponents/components/CTASection'
 import Footer from '../LandingPagecomponents/components/Footer'
 import BookDemoModal from '../components/BookDemoModal'
 
@@ -49,51 +49,51 @@ const NewLandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8">
           <div className="flex justify-between items-center h-12 sm:h-14 md:h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
-              <motion.div 
-                className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg gpu-accelerated"
+            <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+              <motion.img 
+                src={logo}
+                alt="Therabee Logo"
+                className="h-8 w-8 sm:h-9 sm:w-9 md:h-11 md:w-11 rounded-full object-contain bg-white p-1 shadow-sm"
                 whileHover={{ scale: 1.05 }}
-                animate={{ 
-                  rotate: [0, 3, -3, 0],
-                }}
-                transition={{ 
-                  rotate: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-                  scale: { duration: 0.2 }
-                }}
-              >
-                <Stethoscope className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-white" />
-              </motion.div>
-              <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
+                transition={{ scale: { duration: 0.2 } }}
+              />
+              <span className={`text-sm sm:text-base md:text-lg lg:text-xl font-bold whitespace-nowrap ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>
                 Therabee
               </span>
-            </div>
+            </Link>
 
             {/* Navigation Links - Show on md and up */}
             <div className="hidden md:flex items-center space-x-3 lg:space-x-6 xl:space-x-8 flex-1 justify-center max-w-2xl mx-auto">
-              <a href="#features" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium text-sm lg:text-base whitespace-nowrap">Features</a>
-              <a href="#how-it-works" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium text-sm lg:text-base whitespace-nowrap">How It Works</a>
-              <a href="#testimonials" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium text-sm lg:text-base whitespace-nowrap">Testimonials</a>
-              <a href="#pricing" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium text-sm lg:text-base whitespace-nowrap">Pricing</a>
+              <a href="#features" className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium text-sm lg:text-base whitespace-nowrap">Our Services</a>
+              <a href="#core-values" className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium text-sm lg:text-base whitespace-nowrap">Core Values</a>
+              <a href="#how-it-works" className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium text-sm lg:text-base whitespace-nowrap">How It Works</a>
+              <a href="#testimonials" className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium text-sm lg:text-base whitespace-nowrap">Testimonials</a>
             </div>
 
             {/* Action Buttons - Show on md and up */}
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
               <button
                 onClick={() => setShowDemoModal(true)}
-                className="px-3 lg:px-4 py-1.5 lg:py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center space-x-1.5 shadow-md hover:shadow-lg text-sm lg:text-base whitespace-nowrap"
+                className={`px-3 lg:px-4 py-1.5 lg:py-2 font-medium rounded-lg transition-all duration-300 flex items-center space-x-1.5 shadow-md hover:shadow-lg text-sm lg:text-base whitespace-nowrap ${
+                  darkMode 
+                    ? 'bg-white text-black hover:bg-gray-200' 
+                    : 'bg-black text-white hover:bg-[#1A1A1A]'
+                }`}
               >
                 <Calendar className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                 <span>Book Demo</span>
               </button>
               <Link
                 to="/login"
-                className="px-3 lg:px-4 py-1.5 lg:py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium border border-gray-300 dark:border-gray-700 rounded-lg hover:border-blue-600 dark:hover:border-blue-400 text-sm lg:text-base whitespace-nowrap"
+                className="px-3 lg:px-4 py-1.5 lg:py-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium border border-gray-300 dark:border-gray-700 rounded-lg hover:border-black dark:hover:border-white text-sm lg:text-base whitespace-nowrap"
               >
                 Sign In
               </Link>
               <button
                 onClick={toggleDarkMode}
-                className="p-1.5 lg:p-2 text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900"
+                className="p-1.5 lg:p-2 text-gray-700 dark:text-white hover:text-black dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900"
                 aria-label="Toggle dark mode"
               >
                 <motion.div
@@ -110,14 +110,18 @@ const NewLandingPage: React.FC = () => {
             <div className="md:hidden flex items-center space-x-1 sm:space-x-1.5 flex-shrink-0">
               <button
                 onClick={() => setShowDemoModal(true)}
-                className="px-2 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center space-x-1 text-xs whitespace-nowrap shadow-md"
+                className={`px-2 py-1.5 font-medium rounded-lg transition-all duration-300 flex items-center space-x-1 text-xs whitespace-nowrap shadow-md ${
+                  darkMode 
+                    ? 'bg-white text-black hover:bg-gray-200' 
+                    : 'bg-black text-white hover:bg-[#1A1A1A]'
+                }`}
               >
                 <Calendar className="h-3 w-3" />
                 <span>Demo</span>
               </button>
               <button
                 onClick={toggleDarkMode}
-                className="p-1.5 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg"
+                className="p-1.5 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors rounded-lg"
                 aria-label="Toggle dark mode"
               >
                 <motion.div
@@ -135,13 +139,13 @@ const NewLandingPage: React.FC = () => {
               </button>
               <Link
                 to="/login"
-                className="px-2 py-1.5 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium text-xs border border-gray-300 dark:border-gray-700 rounded-lg whitespace-nowrap"
+                className="px-2 py-1.5 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium text-xs border border-gray-300 dark:border-gray-700 rounded-lg whitespace-nowrap"
               >
                 Sign In
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1.5 sm:p-2"
+                className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors p-1.5 sm:p-2"
                 aria-label="Toggle menu"
               >
                 <motion.div
@@ -172,18 +176,29 @@ const NewLandingPage: React.FC = () => {
               <div className="px-2 pt-2 pb-3 space-y-1">
                 <motion.a
                   href="#features"
-                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
+                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.1 }}
                   whileHover={{ x: 5 }}
                 >
-                  Features
+                  Our Services
+                </motion.a>
+                <motion.a
+                  href="#core-values"
+                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                  whileHover={{ x: 5 }}
+                >
+                  Core Values
                 </motion.a>
                 <motion.a
                   href="#how-it-works"
-                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
+                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -194,7 +209,7 @@ const NewLandingPage: React.FC = () => {
                 </motion.a>
                 <motion.a
                   href="#testimonials"
-                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
+                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -202,17 +217,6 @@ const NewLandingPage: React.FC = () => {
                   whileHover={{ x: 5 }}
                 >
                   Testimonials
-                </motion.a>
-                <motion.a
-                  href="#pricing"
-                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.25 }}
-                  whileHover={{ x: 5 }}
-                >
-                  Pricing
                 </motion.a>
                 <motion.button
                   onClick={() => {
@@ -242,23 +246,22 @@ const NewLandingPage: React.FC = () => {
         <HeroSection darkMode={darkMode} onBookDemoClick={() => setShowDemoModal(true)} />
         <VisionSection darkMode={darkMode} />
         <FeaturesSection darkMode={darkMode} />
+        <CoreValuesSection darkMode={darkMode} />
         <HowItWorksSection darkMode={darkMode} />
         <TestimonialsSection darkMode={darkMode} />
-        <PricingSection darkMode={darkMode} />
-        <CTASection darkMode={darkMode} />
         
         {/* Demo Section - Before Footer */}
         <section className={`py-12 sm:py-16 lg:py-20 transition-colors duration-300 relative overflow-hidden ${
           darkMode 
             ? 'bg-black' 
-            : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+            : 'bg-[#F9F9F9]'
         }`}>
           <div className="absolute inset-0 pointer-events-none">
             {[...Array(2)].map((_, i) => (
               <motion.div
                 key={i}
                 className={`absolute rounded-full gpu-accelerated ${
-                  darkMode ? 'bg-blue-500/10' : 'bg-blue-400/20'
+                  darkMode ? 'bg-gray-500/10' : 'bg-gray-400/10'
                 } blur-3xl`}
                 style={{
                   width: `${120 + i * 60}px`,
@@ -320,8 +323,10 @@ const NewLandingPage: React.FC = () => {
               >
                 <button
                   onClick={() => setShowDemoModal(true)}
-                  className={`px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center mx-auto shadow-lg ${
-                    darkMode ? 'shadow-2xl shadow-blue-500/30' : ''
+                  className={`px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 font-bold rounded-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center mx-auto shadow-lg ${
+                    darkMode 
+                      ? 'bg-white text-black hover:bg-gray-200' 
+                      : 'bg-black text-white hover:bg-[#1A1A1A]'
                   }`}
                 >
                   <motion.div

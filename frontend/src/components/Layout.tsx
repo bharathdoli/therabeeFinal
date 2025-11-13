@@ -20,6 +20,7 @@ import { Button } from './ui/button'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { Badge } from './ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
+import logo from '../assets/logo.png'
 
 interface LayoutProps {
   children: ReactNode
@@ -105,9 +106,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
             </Button>
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">TC</span>
-              </div>
+              <img 
+                src={logo} 
+                alt="Therabee Logo" 
+                className="w-10 h-10 rounded-full object-contain bg-white p-1 shadow-sm"
+              />
               <div className="hidden sm:block">
                 <h1 className="text-lg sm:text-xl font-bold text-[#1A1A1A] dark:text-white">Therabee</h1>
                 <p className="text-xs text-[#4D4D4D] dark:text-gray-400">Professional Therapy</p>
