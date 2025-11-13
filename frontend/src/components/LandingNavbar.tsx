@@ -20,7 +20,7 @@ const LandingNavbar: React.FC = () => {
             <img 
               src={logo} 
               alt="Therabee Logo" 
-              className="h-8 w-8 object-contain"
+              className="h-10 w-10 rounded-full object-contain bg-white p-1 shadow-sm"
             />
             <span className="text-xl font-bold text-gray-900 dark:text-white">Therabee</span>
           </Link>

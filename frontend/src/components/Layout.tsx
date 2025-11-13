@@ -109,7 +109,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <img 
                 src={logo} 
                 alt="Therabee Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-10 h-10 rounded-full object-contain bg-white p-1 shadow-sm"
               />
               <div className="hidden sm:block">
                 <h1 className="text-lg sm:text-xl font-bold text-[#1A1A1A] dark:text-white">Therabee</h1>
