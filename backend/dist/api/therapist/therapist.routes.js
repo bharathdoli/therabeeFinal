@@ -20,10 +20,9 @@ const therapist_controller_1 = require("./therapist.controller");
 const therapist_validation_1 = require("./therapist.validation");
 const prisma_1 = __importDefault(require("../../utils/prisma"));
 const router = (0, express_1.Router)();
-// Public route for listing active therapists - MUST be before auth middleware
 router.get('/public', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('Public therapists endpoint hit!'); // Debug log
+        console.log('Public therapists endpoint hit!');
         const therapists = yield prisma_1.default.therapistProfile.findMany({
             where: { status: 'ACTIVE' },
             select: {
@@ -35,25 +34,22 @@ router.get('/public', (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 averageRating: true,
             },
         });
-        console.log('Found therapists:', therapists.length); // Debug log
+        console.log('Found therapists:', therapists.length);
         res.json(therapists);
     }
     catch (error) {
-        console.error('Error in public therapists endpoint:', error); // Debug log
+        console.error('Error in public therapists endpoint:', error);
         res.status(500).json({ message: error.message });
     }
 }));
-// Test route to verify public access
 router.get('/test', (req, res) => {
     res.json({ message: 'Public test route works!' });
 });
-// Protected routes for therapists
 router.use(auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)([client_1.Role.THERAPIST]));
 router.get('/me/profile', therapist_controller_1.getMyProfileHandler);
 router.get('/me/slots/check', therapist_controller_1.checkHasActiveSlotsHandler);
 router.put('/me/slots/available-times', (0, validate_middleware_1.validate)({ body: therapist_validation_1.setAvailableSlotTimesSchema.shape.body }), therapist_controller_1.setAvailableSlotTimesHandler);
-router.post('/me/slots', (0, validate_middleware_1.validate)({ body: therapist_validation_1.createTimeSlotsSchema.shape.body }), // <-- just the schema
-therapist_controller_1.createTimeSlotsHandler);
+router.post('/me/slots', (0, validate_middleware_1.validate)({ body: therapist_validation_1.setScheduleSchema.shape.body }), therapist_controller_1.createTimeSlotsHandler);
 router.get('/me/slots', (0, validate_middleware_1.validate)({ query: therapist_validation_1.getSlotsForDateSchema.shape.query }), therapist_controller_1.getMySlotsForDateHandler);
 router.post('/me/leaves', (0, validate_middleware_1.validate)({ body: therapist_validation_1.requestLeaveSchema.shape.body }), therapist_controller_1.requestLeaveHandler);
 exports.default = router;

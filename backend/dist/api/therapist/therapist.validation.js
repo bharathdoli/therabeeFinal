@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setAvailableSlotTimesSchema = exports.publicSlotsSchema = exports.getSlotsForDateSchema = exports.requestLeaveSchema = exports.createTimeSlotsSchema = void 0;
+exports.setScheduleSchema = exports.setAvailableSlotTimesSchema = exports.publicSlotsSchema = exports.getSlotsForDateSchema = exports.requestLeaveSchema = exports.createTimeSlotsSchema = void 0;
 const zod_1 = require("zod");
 const client_1 = require("@prisma/client");
 const dateYMD = zod_1.z.string()
@@ -16,17 +16,22 @@ const dateYMD = zod_1.z.string()
     .refine((v) => /^\d{4}-\d{2}-\d{2}$/.test(v), {
     message: 'Invalid date format, expected YYYY-MM-DD',
 });
+// export const createTimeSlotsSchema = z.object({
+//   body: z.object({
+//     date: dateYMD, // normalize to YYYY-MM-DD
+//     // Either therapist sends explicit slots (legacy) or requests generation and activation
+//     slots: z.array(z.object({
+//         startTime: z.string().datetime(),
+//         endTime: z.string().datetime(),
+//     })).optional(),
+//     generate: z.boolean().optional(),
+//     activateSlotIds: z.array(z.string().cuid()).optional(), // up to 10
+//   }),
+// });
 exports.createTimeSlotsSchema = zod_1.z.object({
     body: zod_1.z.object({
-        date: dateYMD, // normalize to YYYY-MM-DD
-        // Either therapist sends explicit slots (legacy) or requests generation and activation
-        slots: zod_1.z.array(zod_1.z.object({
-            startTime: zod_1.z.string().datetime(),
-            endTime: zod_1.z.string().datetime(),
-        })).optional(),
-        generate: zod_1.z.boolean().optional(),
-        activateSlotIds: zod_1.z.array(zod_1.z.string().cuid()).optional(), // up to 10
-    }),
+        selectedSlots: zod_1.z.array(zod_1.z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)).min(8).max(8)
+    })
 });
 exports.requestLeaveSchema = zod_1.z.object({
     body: zod_1.z.object({
@@ -48,4 +53,14 @@ exports.setAvailableSlotTimesSchema = zod_1.z.object({
     body: zod_1.z.object({
         slotTimes: zod_1.z.array(zod_1.z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)).min(1).max(8),
     }),
+});
+exports.setScheduleSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        selectedSlots: zod_1.z
+            .array(zod_1.z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
+            message: "Time must be in HH:mm format (e.g., 09:00)"
+        }))
+            .length(8, { message: "You must select exactly 8 time slots" })
+            .refine((slots) => new Set(slots).size === slots.length, { message: "Duplicate time slots are not allowed" })
+    })
 });

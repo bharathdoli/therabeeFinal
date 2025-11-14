@@ -13,18 +13,26 @@ const dateYMD = z.string()
     message: 'Invalid date format, expected YYYY-MM-DD',
   });
 
+// export const createTimeSlotsSchema = z.object({
+//   body: z.object({
+//     date: dateYMD, // normalize to YYYY-MM-DD
+//     // Either therapist sends explicit slots (legacy) or requests generation and activation
+//     slots: z.array(z.object({
+//         startTime: z.string().datetime(),
+//         endTime: z.string().datetime(),
+//     })).optional(),
+//     generate: z.boolean().optional(),
+//     activateSlotIds: z.array(z.string().cuid()).optional(), // up to 10
+//   }),
+// });
 export const createTimeSlotsSchema = z.object({
   body: z.object({
-    date: dateYMD, // normalize to YYYY-MM-DD
-    // Either therapist sends explicit slots (legacy) or requests generation and activation
-    slots: z.array(z.object({
-        startTime: z.string().datetime(),
-        endTime: z.string().datetime(),
-    })).optional(),
-    generate: z.boolean().optional(),
-    activateSlotIds: z.array(z.string().cuid()).optional(), // up to 10
-  }),
+    selectedSlots: z.array(
+      z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)
+    ).min(8).max(8)
+  })
 });
+
 
 export const requestLeaveSchema = z.object({
   body: z.object({
@@ -50,3 +58,20 @@ export const setAvailableSlotTimesSchema = z.object({
     slotTimes: z.array(z.string().regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)).min(1).max(8),
   }),
 });
+
+export const setScheduleSchema = z.object({
+    body : z.object({
+        selectedSlots: z
+    .array(z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
+      message: "Time must be in HH:mm format (e.g., 09:00)"
+    }))
+    .length(8, { message: "You must select exactly 8 time slots" })
+    .refine(
+      (slots) => new Set(slots).size === slots.length,
+      { message: "Duplicate time slots are not allowed" }
+    )
+    })
+});
+
+
+export type SetScheduleInput = z.infer<typeof setScheduleSchema>["body"];

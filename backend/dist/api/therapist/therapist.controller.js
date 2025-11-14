@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setAvailableSlotTimesHandler = exports.checkHasActiveSlotsHandler = exports.getMySlotsForDateHandler = exports.requestLeaveHandler = exports.createTimeSlotsHandler = exports.getMyProfileHandler = void 0;
+exports.checkHasActiveSlotsHandler = exports.getMySlotsForDateHandler = exports.setAvailableSlotTimesHandler = exports.createTimeSlotsHandler = exports.requestLeaveHandler = exports.getMyProfileHandler = void 0;
 const therapistService = __importStar(require("./therapist.service"));
 const prisma_1 = __importDefault(require("../../utils/prisma"));
 const getTherapistId = (userId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -64,19 +64,6 @@ const getMyProfileHandler = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getMyProfileHandler = getMyProfileHandler;
-const createTimeSlotsHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const therapistId = yield getTherapistId(req.user.userId);
-        console.log('[createTimeSlots] therapistId=', therapistId, 'body=', req.body);
-        const result = yield therapistService.createTimeSlots(therapistId, req.body);
-        res.status(201).json(result);
-    }
-    catch (error) {
-        console.error('[createTimeSlots][ERROR]', error);
-        res.status(500).json({ message: error.message });
-    }
-});
-exports.createTimeSlotsHandler = createTimeSlotsHandler;
 const requestLeaveHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const therapistId = yield getTherapistId(req.user.userId);
@@ -88,43 +75,81 @@ const requestLeaveHandler = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.requestLeaveHandler = requestLeaveHandler;
-const getMySlotsForDateHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+const createTimeSlotsHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const therapistId = yield getTherapistId(req.user.userId);
-        const date = ((_d = (_c = (_b = (_a = res.locals) === null || _a === void 0 ? void 0 : _a.validated) === null || _b === void 0 ? void 0 : _b.query) === null || _c === void 0 ? void 0 : _c.date) !== null && _d !== void 0 ? _d : req.query.date);
-        console.log('[getMySlotsForDate] therapistId=', therapistId, 'date=', date);
-        const slots = yield therapistService.getMySlotsForDate(therapistId, { date });
-        res.status(200).json(slots);
+        const userId = req.user.userId;
+        const scheduleData = req.body;
+        const updatedProfile = yield therapistService.therapistScheduleService.setPermanentSchedule(userId, scheduleData);
+        return res.status(200).json({
+            success: true,
+            message: 'Schedule updated successfully.',
+            data: {
+                selectedSlots: updatedProfile.selectedSlots,
+                slotDurationInMinutes: updatedProfile.slotDurationInMinutes,
+                maxSlotsPerDay: updatedProfile.maxSlotsPerDay,
+            }
+        });
     }
     catch (error) {
-        console.error('[getMySlotsForDate][ERROR]', error);
-        res.status(400).json({ message: error.message });
+        console.error('Error setting schedule:', error);
+        if (error instanceof Error) {
+            if (error.message.includes('must select exactly')) {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            if (error.message.includes('Duplicate')) {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            if (error.message.includes('Invalid')) {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+        }
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to set schedule',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+exports.createTimeSlotsHandler = createTimeSlotsHandler;
+const setAvailableSlotTimesHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const therapistId = yield getTherapistId(req.user.userId);
+        const result = yield therapistService.setAvailableSlotTimes(therapistId, req.body.slotTimes);
+        res.json(result);
+    }
+    catch (e) {
+        res.status(400).json({ message: e.message });
+    }
+});
+exports.setAvailableSlotTimesHandler = setAvailableSlotTimesHandler;
+const getMySlotsForDateHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const therapistId = yield getTherapistId(req.user.userId);
+        const result = yield therapistService.getMySlotsForDate(therapistId, { date: req.query.date });
+        res.json(result);
+    }
+    catch (e) {
+        res.status(400).json({ message: e.message });
     }
 });
 exports.getMySlotsForDateHandler = getMySlotsForDateHandler;
 const checkHasActiveSlotsHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const therapistId = yield getTherapistId(req.user.userId);
-        const hasActive = yield therapistService.hasActiveSlots(therapistId);
-        res.status(200).json({ hasActiveSlots: hasActive });
+        const result = yield therapistService.hasActiveSlots(therapistId);
+        res.json({ hasActiveSlots: result });
     }
-    catch (error) {
-        console.error('[checkHasActiveSlots][ERROR]', error);
-        res.status(400).json({ message: error.message });
+    catch (e) {
+        res.status(400).json({ message: e.message });
     }
 });
 exports.checkHasActiveSlotsHandler = checkHasActiveSlotsHandler;
-const setAvailableSlotTimesHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const therapistId = yield getTherapistId(req.user.userId);
-        const { slotTimes } = req.body;
-        const result = yield therapistService.setAvailableSlotTimes(therapistId, slotTimes);
-        res.status(200).json(result);
-    }
-    catch (error) {
-        console.error('[setAvailableSlotTimes][ERROR]', error);
-        res.status(400).json({ message: error.message });
-    }
-});
-exports.setAvailableSlotTimesHandler = setAvailableSlotTimesHandler;

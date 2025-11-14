@@ -67,8 +67,8 @@ router.post(
 
 // Recurring booking routes (Parent only)
 router.post('/recurring', authorize([Role.PARENT]), createRecurringBookingHandler);
-router.get('/recurring', authorize([Role.PARENT]), getRecurringBookingsHandler);
-router.get('/recurring/:recurringBookingId/sessions', authorize([Role.PARENT]), getUpcomingSessionsHandler);
+router.get('/recurring', authorize([Role.PARENT]), getRecurringBookingsHandler);   // working
+router.get('/recurring/:recurringBookingId/sessions', authorize([Role.PARENT]), getUpcomingSessionsHandler); //working
 router.delete('/recurring/:recurringBookingId', authorize([Role.PARENT]), cancelRecurringBookingHandler);
 
 export default router;

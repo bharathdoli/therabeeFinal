@@ -407,8 +407,8 @@ export const getTherapistBookings = async (therapistId: string) => {
 // RECURRING BOOKING SERVICE
 // ============================================
 
-import { RecurrencePattern, DayOfWeek } from '@prisma/client';
-import { addDays, startOfDay, eachDayOfInterval, isWeekend } from 'date-fns';
+import { RecurrencePattern, DayOfWeek,RecurringBooking } from '@prisma/client';
+import { addDays, startOfDay, eachDayOfInterval, isWeekend,format,isAfter } from 'date-fns';
 
 export interface RecurringBookingInput {
   childId: string;
@@ -418,6 +418,19 @@ export interface RecurringBookingInput {
   dayOfWeek?: DayOfWeek; // Required if recurrencePattern is WEEKLY
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD (typically end of month)
+}
+
+
+
+export interface RecurringBookingDetails extends RecurringBooking {
+  totalSessions: number;
+  completedSessions: number;
+  upcomingSessions: number;
+  nextSessionDate?: Date;
+  displaySlotTime: string;
+  displayDateRange: string;
+  therapist: { name: string, specialization: string, baseCostPerSession: number };
+  child: { name: string, age: number };
 }
 
 export class RecurringBookingService {
@@ -446,7 +459,7 @@ export class RecurringBookingService {
     if (!therapist) throw new Error('Therapist not found or not active');
 
     // Validate slot time is in therapist's available slots
-    if (!therapist.availableSlotTimes || !therapist.availableSlotTimes.includes(input.slotTime)) {
+    if (!therapist.selectedSlots || !therapist.selectedSlots.includes(input.slotTime)) {
       throw new Error(`Selected time slot ${input.slotTime} is not available for this therapist. Please select from available slots.`);
     }
 
@@ -799,93 +812,174 @@ export class RecurringBookingService {
   /**
    * Get all recurring bookings for a parent
    */
-  async getParentRecurringBookings(userId: string) {
-    const parent = await prisma.parentProfile.findUnique({
-      where: { userId }
-    });
-    if (!parent) throw new Error('Parent profile not found');
+ async getParentRecurringBookings(
+  userId: string
+): Promise<RecurringBookingDetails[]> {
 
-    return prisma.recurringBooking.findMany({
-      where: { parentId: parent.id },
-      include: {
-        child: true,
-        therapist: {
-          select: {
-            id: true,
-            name: true,
-            specialization: true
-          }
-        },
-        bookings: {
-          where: {
-            status: BookingStatus.SCHEDULED
-          },
-          include: {
-            timeSlot: true
-          },
-          orderBy: {
-            timeSlot: {
-              startTime: 'asc'
-            }
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-  }
-
-  /**
-   * Get upcoming sessions for a recurring booking
-   */
-  async getUpcomingSessionsForRecurring(userId: string, recurringBookingId: string) {
-    const parent = await prisma.parentProfile.findUnique({
-      where: { userId }
-    });
-    if (!parent) throw new Error('Parent profile not found');
-
-    const recurring = await prisma.recurringBooking.findFirst({
-      where: {
-        id: recurringBookingId,
-        parentId: parent.id
-      }
-    });
-
-    if (!recurring) {
-      throw new Error('Recurring booking not found or does not belong to this parent');
+  // Step 1 — resolve parentId from userId
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      timezone: true,
+      parentProfile: { select: { id: true } }
     }
+  });
 
-    const today = new Date();
-
-    return prisma.booking.findMany({
-      where: {
-        recurringBookingId: recurringBookingId,
-        status: BookingStatus.SCHEDULED,
-        timeSlot: {
-          startTime: {
-            gte: today
-          }
-        }
-      },
-      include: {
-        timeSlot: true,
-        child: true,
-        therapist: {
-          select: {
-            id: true,
-            name: true,
-            specialization: true
-          }
-        }
-      },
-      orderBy: {
-        timeSlot: {
-          startTime: 'asc'
-        }
-      }
-    });
+  if (!user || !user.parentProfile) {
+    throw new Error("Parent profile not found");
   }
+
+  const parentId = user.parentProfile.id;
+  const parentTimezone = user.timezone;
+
+  // Step 2 — fetch recurring bookings
+  const recurringBookings = await prisma.recurringBooking.findMany({
+    where: { parentId },
+    include: {
+      therapist: {
+        select: {
+          name: true,
+          specialization: true,
+          baseCostPerSession: true
+        }
+      },
+      child: {
+        select: {
+          name: true,
+          age: true
+        }
+      },
+      bookings: {
+        include: { timeSlot: true },
+        orderBy: { timeSlot: { startTime: "asc" } }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  // Step 3 — enhance and add display fields
+  return recurringBookings.map(recurring => {
+    const now = new Date();
+
+    const totalSessions = recurring.bookings.length;
+    const completedSessions = recurring.bookings.filter(
+      b => b.status === BookingStatus.COMPLETED
+    ).length;
+
+    const upcoming = recurring.bookings.filter(
+      b => isAfter(b.timeSlot.startTime, now) && b.status === BookingStatus.SCHEDULED
+    );
+
+    const upcomingSessions = upcoming.length;
+    const nextSessionDate = upcoming[0]?.timeSlot.startTime ?? null;
+
+    // -------- FIX SLOT WINDOWS (10:00 → 11:00) --------
+    const [slotHour, slotMinute] = recurring.slotTime.split(":").map(Number);
+
+    // Enhance every booking with display fields
+    const enhancedBookings = recurring.bookings.map(booking => {
+      const sessionDate = booking.timeSlot.startTime;
+
+      // Build correct local times
+      const startLocal = new Date(sessionDate);
+      startLocal.setHours(slotHour, slotMinute, 0, 0);
+
+      const endLocal = new Date(startLocal.getTime() + 60 * 60000);
+
+      return {
+        ...booking,
+        displayDate: format(startLocal, "EEEE, MMMM dd, yyyy"),
+        displayTime: `${format(startLocal, "hh:mm a")} - ${format(endLocal, "hh:mm a")}`,
+        displayStartTime: format(startLocal, "yyyy-MM-dd HH:mm")
+      };
+    });
+
+    return {
+      ...recurring,
+      bookings: enhancedBookings, // <–– replaced with fully enhanced data
+      totalSessions,
+      completedSessions,
+      upcomingSessions,
+      nextSessionDate,
+      displaySlotTime: `${format(
+        new Date().setHours(slotHour, slotMinute, 0, 0),
+        "hh:mm a"
+      )} - ${format(
+        new Date().setHours(slotHour + 1, slotMinute, 0, 0),
+        "hh:mm a"
+      )}`,
+      displayDateRange: `${format(recurring.startDate, "MMM dd")} - ${format(
+        recurring.endDate,
+        "MMM dd, yyyy"
+      )}`
+    };
+  });
+}
+
+
+  async getUpcomingSessionsForRecurring(userId: string, recurringBookingId: string) {
+  // 1. Find parent using userId (current logic)
+  const parent = await prisma.parentProfile.findUnique({
+    where: { userId }
+  });
+  if (!parent) throw new Error('Parent profile not found');
+
+  // 2. Check recurring booking exists & belongs to parent
+  const recurring = await prisma.recurringBooking.findFirst({
+    where: {
+      id: recurringBookingId,
+      parentId: parent.id
+    }
+  });
+
+  if (!recurring) {
+    throw new Error('Recurring booking not found or does not belong to this parent');
+  }
+
+  const today = new Date();
+
+  // 3. Fetch bookings (existing logic)
+  const bookings = await prisma.booking.findMany({
+    where: {
+      recurringBookingId: recurringBookingId,
+      status: BookingStatus.SCHEDULED,
+      timeSlot: { startTime: { gte: today } }
+    },
+    include: {
+      timeSlot: true,
+      child: { select: { name: true } },
+      therapist: { select: { name: true, specialization: true } }
+    },
+    orderBy: {
+      timeSlot: { startTime: 'asc' }
+    }
+  });
+
+  // ------------------------------------------
+  // 4. FIX DISPLAY SLOT TIME (10:00 AM - 11:00 AM)
+  // ------------------------------------------
+  const [slotHour, slotMinute] = recurring.slotTime.split(":").map(Number);
+
+  return bookings.map(b => {
+    const localDate = b.timeSlot.startTime; // date only used for calendar day
+
+    // Construct correct local session times
+    const startLocal = new Date(localDate);
+    startLocal.setHours(slotHour, slotMinute, 0, 0);
+
+    const endLocal = new Date(startLocal.getTime() + 60 * 60000); // +1 hour
+
+    return {
+      ...b,
+
+      // --- EXACT FIELDS YOU SHOWED IN OUTPUT ---
+      displayDate: format(startLocal, "EEEE, MMMM dd, yyyy"),
+      displayTime: `${format(startLocal, "hh:mm a")} - ${format(endLocal, "hh:mm a")}`,
+      displayStartTime: format(startLocal, "yyyy-MM-dd HH:mm"),
+    };
+  });
+}
+
 
   /**
    * Cancel a recurring booking (cancels all future sessions)
@@ -936,6 +1030,13 @@ export class RecurringBookingService {
     });
 
     return cancelled;
+  }
+
+   private formatTimeDisplay(time: string): string {
+    const [hours, minutes] = time.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return format(date, 'hh:mm a');
   }
 }
 
